@@ -248,6 +248,29 @@ static int16_t pitchForCells(int n, int16_t maxW, int16_t maxPitch, int16_t minP
     return minPitch;
 }
 
+// Length (in glyph cells) of the longest possible row this app could ever
+// display. Used to pick a *constant* pitch — so cycling cities or rolling
+// over a date never reflows the layout.
+static int worstCaseRowLen() {
+    int m = 5;   // "HH:MM"
+    for (size_t i = 0; i < sizeof(WDAY)/sizeof(WDAY[0]); i++) {
+        int n = (int)strlen(WDAY[i]);
+        if (n > m) m = n;
+    }
+    int monMax = 0;
+    for (size_t i = 0; i < sizeof(MON)/sizeof(MON[0]); i++) {
+        int n = (int)strlen(MON[i]);
+        if (n > monMax) monMax = n;
+    }
+    int dateMax = 3 + monMax;   // "DD " + longest month name
+    if (dateMax > m) m = dateMax;
+    for (int i = 0; i < NUM_TZS; i++) {
+        int n = (int)strlen(TZS[i].city);
+        if (n > m) m = n;
+    }
+    return m;
+}
+
 static int16_t drawDotRow(int16_t y, int16_t pitch,
                           int16_t rOn, int16_t rOff,
                           uint16_t onCol, uint16_t offCol,
@@ -314,11 +337,10 @@ static void drawClock(struct tm &ti) {
     snprintf(dStr, sizeof(dStr), "%02d %s", ti.tm_mday, MON[ti.tm_mon]);
     const char *cityStr = TZS[s_tzIdx].city;
 
-    int longest = (int)strlen(tStr);
-    if ((int)strlen(wkStr)   > longest) longest = (int)strlen(wkStr);
-    if ((int)strlen(dStr)    > longest) longest = (int)strlen(dStr);
-    if ((int)strlen(cityStr) > longest) longest = (int)strlen(cityStr);
-    int16_t pitch = pitchForCells(longest, W, 8, 3);
+    // Pitch is sized for the WORST-case row across all possible weekdays,
+    // months, and cities — never for what's currently on screen. Keeps the
+    // layout pixel-stable when BOOT cycles the city or the date rolls over.
+    int16_t pitch = pitchForCells(worstCaseRowLen(), W, 8, 3);
     int16_t r     = dotR(pitch);
     int16_t rowH  = CELL_ROWS * pitch;
     int16_t rowGap = pitch;
