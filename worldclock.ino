@@ -45,6 +45,12 @@ void setup() {
   power.clearIrqStatus();
   power.enableIRQ(XPOWERS_AXP2101_PKEY_SHORT_IRQ);
   common_init();
+  // Arm the PWR short-press latch + back-to-menu shortcut. Standalone apps
+  // must call this themselves — only the launcher does it implicitly when
+  // entering one of its tiles. Without it, common_consume_pwr_short()
+  // always returns false and PWR-driven actions (dimming, here) appear
+  // dead.
+  common_enter_app();
 
   // Read brightness/timeout. app_worldclock re-mounts SD for SSID/HOME_TIMEZONE/etc.
   SD_MMC.setPins(SDMMC_CLK, SDMMC_CMD, SDMMC_DATA);
