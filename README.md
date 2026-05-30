@@ -3,7 +3,7 @@
 Landscape dot-matrix world clock for the Waveshare ESP32-S3-Touch-AMOLED-1.8,
 built on the app-pixels framework.
 
-NTP-synced. Press **BOOT** to cycle through 8 cities. Press **PWR** to dim.
+NTP-synced. Press **BOOT** to cycle through 21 cities. Press **PWR** to dim.
 
 ## Setup
 
@@ -15,11 +15,16 @@ PASSWORD = your-password
 HOME_TIMEZONE = BERLIN
 ```
 
-`HOME_TIMEZONE` picks which city is shown on boot. Recognised values:
+`HOME_TIMEZONE` picks which city is shown on boot. Recognised values
+(one per major UTC offset, ordered west-to-east):
 
 ```
-LOS ANGELES   NEW YORK   LONDON      BERLIN
-DUBAI         MUMBAI     TOKYO       SYDNEY
+HONOLULU      ANCHORAGE     LOS ANGELES   DENVER
+CHICAGO       NEW YORK      SANTIAGO      SAO PAULO
+LONDON        BERLIN        CAIRO         ATHENS
+MOSCOW        DUBAI         MUMBAI        DHAKA
+BANGKOK       SHANGHAI      TOKYO         SYDNEY
+AUCKLAND
 ```
 
 Defaults to `BERLIN` if the value isn't recognised.

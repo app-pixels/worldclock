@@ -38,15 +38,31 @@ struct TzEntry {
     const char *tz;
 };
 
+// One city per major UTC offset, ordered west-to-east. POSIX TZ strings
+// include DST rules where the location observes DST (US, EU, Australia,
+// New Zealand, Chile); offsets without DST use plain forms.
 static const TzEntry TZS[] = {
+    { "HONOLULU",    "HST10" },
+    { "ANCHORAGE",   "AKST9AKDT,M3.2.0,M11.1.0" },
     { "LOS ANGELES", "PST8PDT,M3.2.0,M11.1.0" },
+    { "DENVER",      "MST7MDT,M3.2.0,M11.1.0" },
+    { "CHICAGO",     "CST6CDT,M3.2.0,M11.1.0" },
     { "NEW YORK",    "EST5EDT,M3.2.0,M11.1.0" },
+    { "SANTIAGO",    "<-04>4<-03>,M9.1.6/24,M4.1.6/24" },
+    { "SAO PAULO",   "<-03>3" },
     { "LONDON",      "GMT0BST,M3.5.0/1,M10.5.0" },
     { "BERLIN",      "CET-1CEST,M3.5.0,M10.5.0/3" },
+    { "CAIRO",       "EET-2" },
+    { "ATHENS",      "EET-2EEST,M3.5.0/3,M10.5.0/4" },
+    { "MOSCOW",      "MSK-3" },
     { "DUBAI",       "GST-4" },
     { "MUMBAI",      "IST-5:30" },
+    { "DHAKA",       "BST-6" },
+    { "BANGKOK",     "ICT-7" },
+    { "SHANGHAI",    "CST-8" },
     { "TOKYO",       "JST-9" },
     { "SYDNEY",      "AEST-10AEDT,M10.1.0,M4.1.0/3" },
+    { "AUCKLAND",    "NZST-12NZDT,M9.5.0,M4.1.0/3" },
 };
 static const int NUM_TZS = (int)(sizeof(TZS) / sizeof(TZS[0]));
 
@@ -66,7 +82,8 @@ static int  s_prevDay  = -1;
 static int  s_prevTzIdx = -2;
 static uint32_t s_lastCheck = 0;
 static bool     s_bootWas   = false;
-static int      s_tzIdx     = 3;   // default to BERLIN (resolved properly in setup)
+static int      s_tzIdx     = 9;   // default to BERLIN (TZS[9]; resolved properly in setup)
+static const int DEFAULT_TZ_IDX = 9;
 static uint8_t  s_brightIdx = 0;
 static const uint8_t BRIGHT_LEVELS[] = { 255, 180, 100, 40, 10 };
 
@@ -156,7 +173,7 @@ static bool readConfig() {
 }
 
 // Resolve cfg_home → s_tzIdx. Case-insensitive city match; fall back to
-// BERLIN (index 3) if no match.
+// DEFAULT_TZ_IDX if no match.
 static void resolveHomeIdx() {
     for (int i = 0; i < NUM_TZS; i++) {
         if (strcasecmp(cfg_home, TZS[i].city) == 0) {
@@ -165,8 +182,8 @@ static void resolveHomeIdx() {
         }
     }
     USBSerial.printf("[worldclock] HOME_TIMEZONE '%s' unknown, defaulting to %s\n",
-                     cfg_home, TZS[3].city);
-    s_tzIdx = 3;
+                     cfg_home, TZS[DEFAULT_TZ_IDX].city);
+    s_tzIdx = DEFAULT_TZ_IDX;
 }
 
 static void applyTz() {
