@@ -44,7 +44,7 @@ struct TzEntry {
 static const TzEntry TZS[] = {
     { "HONOLULU",    "HST10" },
     { "ANCHORAGE",   "AKST9AKDT,M3.2.0,M11.1.0" },
-    { "LOS ANGELES", "PST8PDT,M3.2.0,M11.1.0" },
+    { "L.A.",        "PST8PDT,M3.2.0,M11.1.0" },
     { "DENVER",      "MST7MDT,M3.2.0,M11.1.0" },
     { "CHICAGO",     "CST6CDT,M3.2.0,M11.1.0" },
     { "NEW YORK",    "EST5EDT,M3.2.0,M11.1.0" },
@@ -248,27 +248,15 @@ static int16_t pitchForCells(int n, int16_t maxW, int16_t maxPitch, int16_t minP
     return minPitch;
 }
 
-// Length (in glyph cells) of the longest possible row this app could ever
-// display. Used to pick a *constant* pitch — so cycling cities or rolling
-// over a date never reflows the layout.
-static int worstCaseRowLen() {
-    int m = 5;   // "HH:MM"
-    for (size_t i = 0; i < sizeof(WDAY)/sizeof(WDAY[0]); i++) {
-        int n = (int)strlen(WDAY[i]);
-        if (n > m) m = n;
-    }
-    int monMax = 0;
-    for (size_t i = 0; i < sizeof(MON)/sizeof(MON[0]); i++) {
-        int n = (int)strlen(MON[i]);
-        if (n > monMax) monMax = n;
-    }
-    int dateMax = 3 + monMax;   // "DD " + longest month name
-    if (dateMax > m) m = dateMax;
-    for (int i = 0; i < NUM_TZS; i++) {
-        int n = (int)strlen(TZS[i].city);
-        if (n > m) m = n;
-    }
-    return m;
+// Cap month names at MONTH_MAX_LEN; longer names render as <first 4 letters>.
+// Today that only catches SEPTEMBER → SEPT.; FEBRUARY/NOVEMBER/DECEMBER are 8
+// chars and stay full.
+#define MONTH_MAX_LEN 8
+
+static const char *shortMonth(const char *m, char *buf, size_t bufLen) {
+    if ((int)strlen(m) <= MONTH_MAX_LEN) return m;
+    snprintf(buf, bufLen, "%.4s.", m);
+    return buf;
 }
 
 static int16_t drawDotRow(int16_t y, int16_t pitch,
@@ -333,14 +321,17 @@ static void drawClock(struct tm &ti) {
     char tStr[8];
     snprintf(tStr, sizeof(tStr), "%02d:%02d", ti.tm_hour, ti.tm_min);
     const char *wkStr = WDAY[ti.tm_wday];
+    char monBuf[16];
+    const char *monStr = shortMonth(MON[ti.tm_mon], monBuf, sizeof(monBuf));
     char dStr[20];
-    snprintf(dStr, sizeof(dStr), "%02d %s", ti.tm_mday, MON[ti.tm_mon]);
+    snprintf(dStr, sizeof(dStr), "%02d %s", ti.tm_mday, monStr);
     const char *cityStr = TZS[s_tzIdx].city;
 
-    // Pitch is sized for the WORST-case row across all possible weekdays,
-    // months, and cities — never for what's currently on screen. Keeps the
-    // layout pixel-stable when BOOT cycles the city or the date rolls over.
-    int16_t pitch = pitchForCells(worstCaseRowLen(), W, 8, 3);
+    int longest = (int)strlen(tStr);
+    if ((int)strlen(wkStr)   > longest) longest = (int)strlen(wkStr);
+    if ((int)strlen(dStr)    > longest) longest = (int)strlen(dStr);
+    if ((int)strlen(cityStr) > longest) longest = (int)strlen(cityStr);
+    int16_t pitch = pitchForCells(longest, W, 8, 3);
     int16_t r     = dotR(pitch);
     int16_t rowH  = CELL_ROWS * pitch;
     int16_t rowGap = pitch;

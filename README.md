@@ -37,7 +37,7 @@ TIMEOUT =
 `HOME_TIMEZONE` is matched against the built-in city list (case-insensitive). One per major UTC offset, ordered west-to-east:
 
 ```
-HONOLULU      ANCHORAGE     LOS ANGELES   DENVER
+HONOLULU      ANCHORAGE     L.A.          DENVER
 CHICAGO       NEW YORK      SANTIAGO      SAO PAULO
 LONDON        BERLIN        CAIRO         ATHENS
 MOSCOW        DUBAI         MUMBAI        DHAKA
