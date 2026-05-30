@@ -1,22 +1,40 @@
 # worldclock
 
-Landscape dot-matrix world clock for the Waveshare ESP32-S3-Touch-AMOLED-1.8,
-built on the app-pixels framework.
+**World Clock** · v1.0.2
 
-NTP-synced. Press **BOOT** to cycle through 21 cities. Press **PWR** to dim.
+Landscape dot-matrix world clock. BOOT cycles through 21 cities (one per major UTC offset); `HOME_TIMEZONE` in `setup.txt` picks the boot city.
 
-## Setup
+**Hardware:** Waveshare ESP32-S3 AMOLED 1.8"
 
-In `/setup/setup.txt` on the SD card:
+**Tags:** `#COMMUNITY` `#clock`
+
+NTP-synced once at boot. After that, every BOOT press just changes the displayed timezone — the device already knows UTC, so switching cities is instant and offline. Departure-board dot-matrix look, locked to landscape (448×368).
+
+## Controls
 
 ```
-SSID = your-wifi
-PASSWORD = your-password
-HOME_TIMEZONE = BERLIN
+  BOOT short — cycle to the next city's local time
+  PWR  short — cycle brightness
 ```
 
-`HOME_TIMEZONE` picks which city is shown on boot. Recognised values
-(one per major UTC offset, ordered west-to-east):
+## SD card setup
+
+Place a `/setup/setup.txt` on the SD card. Recognised keys:
+
+```
+SSID =
+PASSWORD =
+SSID2 =
+PASSWORD2 =
+SSID3 =
+PASSWORD3 =
+HOME_TIMEZONE =
+CLOCK_COLOR =
+BRIGHTNESS =
+TIMEOUT =
+```
+
+`HOME_TIMEZONE` is matched against the built-in city list (case-insensitive). One per major UTC offset, ordered west-to-east:
 
 ```
 HONOLULU      ANCHORAGE     LOS ANGELES   DENVER
@@ -29,20 +47,36 @@ AUCKLAND
 
 Defaults to `BERLIN` if the value isn't recognised.
 
-Optional:
-
-```
-CLOCK_COLOR = #FBCC04    # override the default white+yellow palette
-BRIGHTNESS  = 180        # 1–255
-TIMEOUT     = 0          # seconds to auto-off; 0 disables
-```
-
 ## Build
 
-Submit via [app-pixels.com/submit](https://www.app-pixels.com/submit) — CI
-compiles against the canonical sketchbook. Local build uses the same FQBN as
-every other app-pixels app.
+1. Install [arduino-cli](https://arduino.github.io/arduino-cli/) or Arduino IDE 2.x.
+2. Add the ESP32 board package (≥ 3.1.0):
+
+   ```
+   arduino-cli core update-index --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+   arduino-cli core install esp32:esp32 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+   ```
+
+3. Install the required Arduino libraries:
+
+   - Adafruit XCA9554
+   - GFX Library for Arduino (moononournation)
+   - XPowersLib (lewishe)
+
+4. Compile and upload:
+
+   ```
+   FQBN='esp32:esp32:esp32s3:USBMode=default,CDCOnBoot=cdc,PSRAM=opi,FlashSize=16M,FlashMode=qio,PartitionScheme=app3M_fat9M_16MB,UploadSpeed=921600,LoopCore=1,EventsCore=1'
+   arduino-cli compile -b "$FQBN" --build-path /tmp/worldclock_build .
+   arduino-cli upload  -b "$FQBN" --input-dir /tmp/worldclock_build -p /dev/ttyACM0 .
+   ```
+
+   For browser flashing without a build environment, use the [pre-built binary](https://www.app-pixels.com/apps/worldclock).
 
 ## License
 
 MIT — see [LICENSE](LICENSE). Do whatever you want with it.
+
+---
+
+Part of the [app-pixels.com](https://www.app-pixels.com) catalogue · live listing: https://www.app-pixels.com/apps/worldclock
