@@ -1,3 +1,5 @@
+> Part of [**app-pixels.com**](https://www.app-pixels.com) — browse + flash this app at [`/apps/worldclock`](https://www.app-pixels.com/apps/worldclock).
+
 # worldclock
 
 **World Clock** · v1.0.2
